@@ -1,0 +1,2 @@
+#!/bin/bash
+iw wlx3c77e63e15ac vendor send 0x005043 0x00 0x01

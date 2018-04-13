@@ -1,0 +1,3 @@
+#!/bin/bash
+# SIGPID=$(pidof /opt/hardware-apps/bin/sig-text.sh)
+net-tools ; kill $(cat bgpid)

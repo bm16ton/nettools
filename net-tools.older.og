@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# we search for multimedia using present tools...
+#ls /sys/class/net > PLAYLIST
+echo "" > rate-sig
+iwconfig 2>&1 | grep -i essid | grep -v "no wireless extensions" | awk '{print $1}' > PLAYLIST
+#killall mplayer
+/opt/hardware-apps/bin/sig-text.sh &
+export bgPid=$!
+# ./iw-name.sh &
+# export bgPid2=$!
+[ -z $GTKDIALOG ] && GTKDIALOG=gtkdialog
+
+# gtkdialog header
+echo '<window title="16ton Network app" width-request="503" height-request="237"> <vbox>
+<hbox height-request="115">		
+	<vbox>
+	<hbox>		
+		<button>
+			<label>wifi link info (highlight card)</label>
+			<action>xterm -e /opt/hardware-apps/bin/stats-net-tools.sh &xterm -e /opt/hardware-apps/bin/stats2-net-tools.sh &</action>
+		</button>
+			<text>
+				<label>on dev </label>
+			</text>
+	</hbox>
+	<hbox>
+		<button>
+			<label>set txpower dbi to </label>
+			<action>pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY xterm +hold -e iwconfig $LIST txpower $COMBOBOX</action>
+		</button>
+			<combobox width-request="60">
+				<variable>COMBOBOX</variable>
+				<item>8</item>
+				<item>12</item>
+				<item>16</item>
+				<item>19</item>
+				<item>20</item>
+				<item>22</item>
+			</combobox>
+					<text>
+				<label>on dev </label>
+			</text>
+	</hbox>
+	<hbox>
+		<button>
+			<label>wireless signal (w/ wavemon)</label>
+			<action>xterm -e wavemon -i $LIST &</action>
+		</button>
+			<text>
+				<label>on dev </label>
+			</text>
+	</hbox>
+	</vbox>
+	<list> <width>30</width> <variable>LIST</variable>' > DIALOG
+#feed the list
+while read theline; do
+	#ls "$theline";
+	echo "<item>$theline</item>" >> DIALOG;
+done < PLAYLIST
+
+# gtkdialog footer
+
+#<action signal="selection-changed">	echo "LIST=\"$LIST\" - selection-changed"</action>
+#<action signal="button-press-event">	echo "$(killall mplayer) - button-press-event"	</action>
+#<action signal="key-press-event">	echo $(mplayer -quiet "$LIST")" - key-press-event"</action>
+echo '
+</list>
+</hbox>
+	<vbox>
+	<hbox homogeneous="true" space-expand="false" space-fill="false">
+		<button>
+			<label>Show info for wifi device PHY</label>
+			<action>xterm -hold -e iw phy$ENTRY info &</action>
+		</button>
+			<combobox width-request="60">
+				<variable>ENTRY</variable>
+				<item>0</item>
+			</combobox>
+	</hbox>
+	</vbox>
+<hseparator width-request="503"></hseparator>
+<hbox homogeneous="true" space-expand="false" space-fill="false">
+		<button>
+			<label>arp list without search  (no root)</label>
+			<action>xterm -hold -e arp -a &</action>
+		</button>
+		<button>
+			<label>"arp search  (requires root)"</label>
+			<action>pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY xterm -hold -e arp-scan --localnet</action>
+		</button>
+</hbox>
+		<button>
+			<action>xterm -e kill $bgPid</action>
+			<action function="exit">OK</action>
+		</button>
+
+</vbox> </window>' >> DIALOG
+
+case $2 in
+	-d | --dump) echo "$DIALOG" ;;
+	*) $GTKDIALOG -c -f DIALOG ;;
+esac

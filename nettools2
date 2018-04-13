@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# we search for multimedia using present tools...
+#ls /sys/class/net > PLAYLIST
+mkdir ~/.net-tools 2> /dev/null
+touch ~/.net-tools/PLAYLIST  2> /dev/null
+touch ~/.net-tools/rate-sig  2> /dev/null
+echo "" > ~/.net-tools/PLAYLIST
+echo "" > ~/.net-tools/rate-sig
+echo "" > ~/.net-tools/bgpid
+export ratesig=~/.net-tools/rate-sig
+export playlist=~/.net-tools/PLAYLIST
+iwconfig 2>&1 | grep -i essid | grep -v "no wireless extensions" | awk '{print $1}' > ~/.net-tools/PLAYLIST
+#killall mplayer
+sig-text.sh &
+export bgPid=$!
+echo $bgPid > ~/.net-tools/bgpid
+/opt/hardware-apps/bin/iw-name.sh
+# export bgPid=$!
+# echo $bgPid > ~/.net-tools/bgpid
+[ -z $GTKDIALOG ] && GTKDIALOG=gtkdialog
+
+# gtkdialog header
+MAIN_DIALOG='
+<window title="16ton Network app" width-request="703"> <vbox>
+<hbox height-request="115">		
+	<vbox>
+	<hbox>		
+		<button>
+			<label>wifi link info (highlight card)</label>
+			<action>xterm -e /opt/hardware-apps/bin/stats-net-tools.sh &xterm -e /opt/hardware-apps/bin/stats2-net-tools.sh &</action>
+		</button>
+			<text>
+				<label>on dev </label>
+			</text>
+	</hbox>
+	<hbox>
+		<button>
+			<label>set txpower dbi to </label>
+			<action>pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY iwconfig $LIST txpower $COMBOBOX || zenity --warning --text "Didnt select a device!"</action>
+		</button>
+			<comboboxentry width-request="60">
+				<variable>COMBOBOX</variable>
+				<default>19</default>
+				<item>8</item>
+				<item>12</item>
+				<item>17</item>
+				<item>19</item>
+				<item>20</item>
+				<item>22</item>
+			</comboboxentry>
+					<text>
+				<label>on dev </label>
+			</text>
+	</hbox>
+	<hbox>
+		<button>
+			<label>wireless signal (w/ wavemon)</label>
+			<action>xterm -e wavemon -i $LIST &</action>
+		</button>
+			<text>
+				<label>on dev </label>
+			</text>
+	</hbox>
+	</vbox>
+	<list file-monitor="true"> <width>30</width> 
+	<input file>'$playlist'</input>
+	<action signal="file-changed">clear:'LIST'</action>
+	<action signal="file-changed">refresh:'LIST'</action>
+	<variable>LIST</variable>
+</list>
+</hbox>
+	<hbox>
+	<vbox homogeneous="false" space-expand="true" space-fill="true">
+			<text auto-refresh="true">
+				<input file>'$playlist'</input>
+			</text>
+	</vbox>
+	<vbox homogeneous="false" space-expand="true" space-fill="true">
+			<text auto-refresh="true">
+				<input file>'$ratesig'</input>
+			</text>
+	</vbox>
+	</hbox>
+	<vbox>
+	<hbox homogeneous="true" space-expand="false" space-fill="false">
+		<button>
+			<label>Show info for wifi device PHY</label>
+			<action>xterm -hold -e iw phy$ENTRY info &</action>
+		</button>
+			<combobox width-request="60">
+				<variable>ENTRY</variable>
+				<item>0</item>
+			</combobox>
+	</hbox>
+	</vbox>
+<hseparator width-request="503"></hseparator>
+<hbox homogeneous="true" space-expand="false" space-fill="false">
+		<button>
+			<label>arp list without search  (no root)</label>
+			<action>xterm -hold -e arp -a &</action>
+		</button>
+		<button>
+			<label>"arp search  (requires root)"</label>
+			<action>pkexec env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY xterm -hold -e arp-scan --localnet</action>
+		</button>
+</hbox>
+		<button>
+			<action function="exit">OK</action>
+		</button>
+
+</vbox> </window>' 
+export MAIN_DIALOG
+
+case $2 in
+	-d | --dump) echo "$DIALOG" ;;
+	*) $GTKDIALOG --program=MAIN_DIALOG ; kill $(cat ~/.net-tools/bgpid) ;;
+esac

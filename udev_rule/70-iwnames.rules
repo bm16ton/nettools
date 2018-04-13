@@ -1,0 +1,2 @@
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", RUN+="/opt/hardware-apps/bin/iw-name.sh"
+SUBSYSTEM=="net", ACTION=="remove", DRIVERS=="?*", RUN+="/opt/hardware-apps/bin/iw-name.sh"
